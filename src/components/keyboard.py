@@ -1,7 +1,6 @@
 
 from __future__ import annotations
 
-from functools import cached_property
 from typing import TYPE_CHECKING, Any
 
 from tkinter import *
@@ -9,7 +8,7 @@ from tkinter import ttk
 
 from src.services.calculator_service import Token
 
-from .button import CalculateButton, ClearButton, SendTokenButton
+from .button import BackspaceButton, CalculateButton, ClearButton, SendTokenButton
 
 if TYPE_CHECKING:
     from src.components.application import Application
@@ -31,9 +30,9 @@ class Keyboard(Frame):
         buttons: list[ttk.Button] = [
 
             # first row
-            ClearButton(application=master,  token=Token.clear, master=self),
+            ClearButton(application=master, text='C', master=self),
+            BackspaceButton(application=master, text='⌫', master=self),
             SendTokenButton(application=master, token=Token.parenthesis, master=self),
-            SendTokenButton(application=master, token=Token.percentage, master=self),
             SendTokenButton(application=master, token=Token.divide, master=self),
 
             # second row
@@ -58,7 +57,7 @@ class Keyboard(Frame):
             SendTokenButton(application=master, token=Token.negate, master=self),
             SendTokenButton(application=master, token=Token.zero, master=self),
             SendTokenButton(application=master, token=Token.decimal, master=self),
-            CalculateButton(application=master,  token=Token.equals, master=self),
+            CalculateButton(application=master, text='=', master=self),
 
         ]
 

@@ -12,26 +12,38 @@ if TYPE_CHECKING:
     from src.components.application import Application
 
 
+class BackspaceButton(ttk.Button):
+
+    def __init__(self, *args: Any, application: Application, **kwargs: Any) -> None:
+
+        def command() -> None:
+            application.calculator.backspace_expression()
+            application.display.set_current_expression_label_text(text=application.calculator.get_expression())
+            application.display.set_result_label_text(text=application.calculator.evalutate_expression())
+
+        super().__init__(*args, style='clear.TButton', command=command, **kwargs)
+
+
 class CalculateButton(ttk.Button):
 
-    def __init__(self, *args: Any, application: Application, token: Token, **kwargs: Any) -> None:
+    def __init__(self, *args: Any, application: Application, **kwargs: Any) -> None:
 
         def command() -> None:
             application.display.set_result_label_text(text=application.calculator.evalutate_expression())
 
-        super().__init__(*args, text=token.value, style='calculate.TButton', command=command, **kwargs)
+        super().__init__(*args, style='calculate.TButton', command=command, **kwargs)
 
 
 class ClearButton(ttk.Button):
 
-    def __init__(self, *args: Any, application: Application, token: Token, **kwargs: Any) -> None:
+    def __init__(self, *args: Any, application: Application, **kwargs: Any) -> None:
 
         def command() -> None:
             application.calculator.clear_expression()
             application.display.set_current_expression_label_text(text=application.calculator.get_expression())
             application.display.set_result_label_text(text=application.calculator.evalutate_expression())
 
-        super().__init__(*args, text=token.value, style='clear.TButton', command=command, **kwargs)
+        super().__init__(*args, style='clear.TButton', command=command, **kwargs)
 
 
 class SendTokenButton(ttk.Button):

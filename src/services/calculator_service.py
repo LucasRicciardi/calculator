@@ -33,14 +33,11 @@ class Token(StrEnum):
     minus: str = '-'
     multiply: str = '*'
     divide: str = '/'
-    equals: str = '='
     negate: str = '+/-'
 
     # Other
     parenthesis: str = '()'
-    percentage: str = '%'
     decimal: str = ','
-    clear: str = 'C'
 
 
 DIGIT_TOKENS: set[Token] = {token for token in Token if token.value.isdigit()}
@@ -92,11 +89,6 @@ class CalculatorService:
                 self.expression += ['-']
             else:
                 self.expression += ['(-']
-        elif token == Token.percentage:
-            if self.last_element.isdigit() or self.last_element == ')':
-                self.expression += ['%']
-            else:
-                logger.warning(msg='That will result in a invalid expression')
         elif token == Token.decimal:
             if self.last_element.isdigit():
                 is_decimal_number: bool = False
@@ -124,8 +116,12 @@ class CalculatorService:
                 logger.warning(msg='That will result in a invalid expression')
             elif self.last_element in OPERATORS_TOKENS:
                 self.expression[-1] = token.value
-            elif self.last_element in DIGIT_TOKENS:
+            else:
                 self.expression += [token.value]
+
+    def backspace_expression(self) -> None:
+        if len(self.expression) > 0:
+            self.expression.pop()
 
     def get_expression(self) -> str:
         return ''.join(self.expression)
@@ -135,19 +131,17 @@ class CalculatorService:
             if len(self.expression) == 0:
                 self.last_result = 0.0
             else:
-                self.last_result = self._normalize_result(
-                    value=self._evaluate_expression_tree(
-                        node=self._postfix_to_tree(
-                            postfix=self._infix_to_postfix(
-                                infix=self.expression
-                            )
+                self.last_result = self._evaluate_expression_tree(
+                    node=self._postfix_to_tree(
+                        postfix=self._infix_to_postfix(
+                            infix=self.expression
                         )
                     )
                 )
         except Exception as e:
             logger.warning(msg=f'Could not calculate result due to malformed expression. Reason: {e}')
         finally:
-            return self.last_result
+            return self._normalize_result(value=self.last_result)
 
     def clear_expression(self) -> None:
         self.expression = []
