@@ -139,7 +139,7 @@ class CalculatorService:
                     value=self._evaluate_expression_tree(
                         node=self._postfix_to_tree(
                             postfix=self._infix_to_postfix(
-                                infix=self.get_expression()
+                                infix=self.expression
                             )
                         )
                     )
