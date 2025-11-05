@@ -185,7 +185,7 @@ class CalculatorService:
             return 2
         elif operator == Token.power:
             return 3
-        elif operator in SCIENTIFIC_FUNCTIONS or operator in {'sin', 'cos', 'tan', '√', 'log', 'ln', 'e^x'}:
+        elif operator in SCIENTIFIC_FUNCTIONS:
             return 4
         else:
             return 5
@@ -215,7 +215,7 @@ class CalculatorService:
                 while operator_stack[-1] != '(':
                     output_queue.append(operator_stack.pop())
                 operator_stack.pop()
-            elif token in {'sin', 'cos', 'tan', '√', 'log', 'ln', 'e^x'}:
+            elif token in SCIENTIFIC_FUNCTIONS:
                 operator_stack.append(token)
             elif token in OPERATORS_TOKENS:
                 operator_one: str = token
@@ -241,7 +241,7 @@ class CalculatorService:
             # Check if token is a number (digit or contains comma for decimal)
             if token.isdigit() or token == 'π' or ',' in token:
                 stack.append(ExpressionTreeNode(value=token))
-            elif token in {'sin', 'cos', 'tan', '√', 'log', 'ln', 'e^x'}:
+            elif token in SCIENTIFIC_FUNCTIONS:
                 stack.append(
                     ExpressionTreeNode(value=token, right=stack.pop())
                 )
