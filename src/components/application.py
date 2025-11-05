@@ -35,7 +35,7 @@ class Application(Tk):
         style.configure('clear.TButton', foreground='red')
         style.configure('calculate.TButton', foreground='blue')
 
-        self.geometry(newGeometry='400x600')
+        self.geometry(newGeometry='500x700')
         self.title(string='Calculator')
 
         self.rowconfigure(index=0, weight=0)

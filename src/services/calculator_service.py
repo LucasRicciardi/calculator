@@ -1,4 +1,6 @@
 
+import math
+
 from dataclasses import MISSING, dataclass, field
 from enum import StrEnum
 from logging import Logger, getLogger
@@ -39,9 +41,21 @@ class Token(StrEnum):
     parenthesis: str = '()'
     decimal: str = ','
 
+    # Scientific functions
+    sin: str = 'sin'
+    cos: str = 'cos'
+    tan: str = 'tan'
+    sqrt: str = '√'
+    power: str = '^'
+    log: str = 'log'
+    ln: str = 'ln'
+    exp: str = 'e^x'
+    pi: str = 'π'
+
 
 DIGIT_TOKENS: set[Token] = {token for token in Token if token.value.isdigit()}
-OPERATORS_TOKENS: set[Token] = {Token.plus, Token.minus, Token.multiply, Token.divide}
+OPERATORS_TOKENS: set[Token] = {Token.plus, Token.minus, Token.multiply, Token.divide, Token.power}
+SCIENTIFIC_FUNCTIONS: set[Token] = {Token.sin, Token.cos, Token.tan, Token.sqrt, Token.log, Token.ln, Token.exp}
 
 
 class CalculatorService:
@@ -49,6 +63,7 @@ class CalculatorService:
     def __init__(self) -> None:
         self.expression: list[str] = []
         self.last_result: float = 0.0
+        self.scientific_mode: bool = False
 
     @property
     def last_element(self) -> str:
@@ -77,6 +92,16 @@ class CalculatorService:
                     self.expression += [')']
             else:
                 self.expression += ['(']
+        elif token == Token.pi:
+            if self.last_element == ')' or self.last_element.isdigit():
+                self.expression += ['*', 'π']
+            else:
+                self.expression += ['π']
+        elif token in SCIENTIFIC_FUNCTIONS:
+            if self.last_element == ')' or self.last_element.isdigit():
+                self.expression += ['*', token.value, '(']
+            else:
+                self.expression += [token.value, '(']
         elif token == Token.negate:
             if self.last_element.isdigit():
                 last_digit_index: int = -1
@@ -146,6 +171,9 @@ class CalculatorService:
     def clear_expression(self) -> None:
         self.expression = []
 
+    def toggle_mode(self) -> None:
+        self.scientific_mode = not self.scientific_mode
+
     def _normalize_result(self, value: float) -> int | float:
         return int(value) if value.is_integer() else value
 
@@ -155,15 +183,31 @@ class CalculatorService:
             return 1
         elif operator in {Token.multiply, Token.divide}:
             return 2
-        else:
+        elif operator == Token.power:
             return 3
+        elif operator in SCIENTIFIC_FUNCTIONS or operator in {'sin', 'cos', 'tan', '√', 'log', 'ln', 'e^x'}:
+            return 4
+        else:
+            return 5
 
     def _infix_to_postfix(self, infix: list[str]) -> list[str]:
         output_queue: list[str] = []
         operator_stack: list[str] = []
 
-        for token in infix:
+        i = 0
+        while i < len(infix):
+            token = infix[i]
+            
+            # Combine consecutive digits and commas into a single number
             if token.isdigit():
+                number = token
+                i += 1
+                while i < len(infix) and (infix[i].isdigit() or infix[i] == ','):
+                    number += infix[i]
+                    i += 1
+                output_queue.append(number)
+                continue
+            elif token == 'π':
                 output_queue.append(token)
             elif token == '(':
                 operator_stack.append(token)
@@ -171,6 +215,8 @@ class CalculatorService:
                 while operator_stack[-1] != '(':
                     output_queue.append(operator_stack.pop())
                 operator_stack.pop()
+            elif token in {'sin', 'cos', 'tan', '√', 'log', 'ln', 'e^x'}:
+                operator_stack.append(token)
             elif token in OPERATORS_TOKENS:
                 operator_one: str = token
                 while operator_stack and operator_stack[-1] in OPERATORS_TOKENS:
@@ -180,6 +226,8 @@ class CalculatorService:
                     else:
                         break
                 operator_stack.append(token)
+            
+            i += 1
 
         while operator_stack:
             output_queue.append(operator_stack.pop())
@@ -190,8 +238,12 @@ class CalculatorService:
     def _postfix_to_tree(postfix: list[str]) -> ExpressionTreeNode:
         stack: list[ExpressionTreeNode] = []
         for token in postfix:
-            if token.isdigit():
+            if token.isdigit() or token == 'π':
                 stack.append(ExpressionTreeNode(value=token))
+            elif token in {'sin', 'cos', 'tan', '√', 'log', 'ln', 'e^x'}:
+                stack.append(
+                    ExpressionTreeNode(value=token, right=stack.pop())
+                )
             elif token in OPERATORS_TOKENS:
                 stack.append(
                     ExpressionTreeNode(value=token, left=stack.pop(), right=stack.pop())
@@ -200,7 +252,28 @@ class CalculatorService:
 
     def _evaluate_expression_tree(self, node: ExpressionTreeNode) -> float:
         if node.left is None and node.right is None:
+            if node.value == 'π':
+                return math.pi
             return float(node.value)
+
+        # Handle unary operators (scientific functions)
+        if node.left is None and node.right is not None:
+            right_result: float = self._evaluate_expression_tree(node=node.right)
+            match node.value:
+                case 'sin':
+                    return math.sin(math.radians(right_result))
+                case 'cos':
+                    return math.cos(math.radians(right_result))
+                case 'tan':
+                    return math.tan(math.radians(right_result))
+                case '√':
+                    return math.sqrt(right_result)
+                case 'log':
+                    return math.log10(right_result)
+                case 'ln':
+                    return math.log(right_result)
+                case 'e^x':
+                    return math.exp(right_result)
 
         left_result: float = self._evaluate_expression_tree(node=node.left)
         right_result: float = self._evaluate_expression_tree(node=node.right)
@@ -214,3 +287,5 @@ class CalculatorService:
                 return right_result + left_result
             case Token.minus:
                 return right_result - left_result
+            case '^':
+                return right_result ** left_result
