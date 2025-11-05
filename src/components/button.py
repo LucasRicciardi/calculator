@@ -55,3 +55,13 @@ class SendTokenButton(ttk.Button):
             application.display.set_result_label_text(text=application.calculator.evalutate_expression())
 
         super().__init__(*args, text=token.value, command=command, **kwargs)
+
+
+class ToggleModeButton(ttk.Button):
+    def __init__(self, *args: Any, application: Application, **kwargs: Any) -> None:
+
+        def command() -> None:
+            application.calculator.toggle_mode()
+            application.keyboard.refresh_layout()
+
+        super().__init__(*args, text='SCI', command=command, **kwargs)
