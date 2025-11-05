@@ -238,7 +238,8 @@ class CalculatorService:
     def _postfix_to_tree(postfix: list[str]) -> ExpressionTreeNode:
         stack: list[ExpressionTreeNode] = []
         for token in postfix:
-            if token.isdigit() or token == 'π':
+            # Check if token is a number (digit or contains comma for decimal)
+            if token.isdigit() or token == 'π' or ',' in token:
                 stack.append(ExpressionTreeNode(value=token))
             elif token in {'sin', 'cos', 'tan', '√', 'log', 'ln', 'e^x'}:
                 stack.append(
@@ -254,7 +255,8 @@ class CalculatorService:
         if node.left is None and node.right is None:
             if node.value == 'π':
                 return math.pi
-            return float(node.value)
+            # Replace comma with dot for float conversion
+            return float(node.value.replace(',', '.'))
 
         # Handle unary operators (scientific functions)
         if node.left is None and node.right is not None:
